@@ -1,0 +1,116 @@
+#pragma kernel CSMain
+
+struct PlayerData
+{
+    float3 Pos;
+    float3 Vel;
+    float Radius;
+};
+
+
+RWStructuredBuffer<PlayerData> Player; //holds position and velocity for the player.
+RWTexture2D<float4> MapTex;
+
+uniform float2 Resolution;
+uniform float3 SunDir;
+uniform float3 SkyLight = float3(0, 1, 0);
+
+uniform float2 PlayerInput; //force to be applied to player
+uniform float3 Gravity;
+uniform float Delta;
+uniform int MaxRaySteps;
+
+float sdfSphere(in float3 pos, in float radius)
+{
+    return length(pos) - radius;
+}
+
+float Ground(in float3 pos, in float3 normal, in float distance)
+{
+    return dot(pos, normal) + distance;
+}
+
+
+float map(in float3 pos)
+{
+    //distance sphere
+    float d = sdfSphere(pos, 0.5);
+    //float floor = Ground(float3(-1,-1,-1),normalize(float3(0.1,1,0.5)),1.0); //floor to be drawn.
+    //float floor = pos.y -1.5;
+    return d;// min(d, floor);
+}
+float3 CalcNormal(in float3 pos)
+{
+    float2 e = float2(0.0001, 0.0);//accuracy of a normal
+    return normalize(float3(map(pos + e.xyy) - map(pos - e.xyy),
+        map(pos + e.yxy) - map(pos - e.yxy),
+        map(pos + e.yyx) - map(pos - e.yyx)));
+}
+float TraceRay(float3 RO, float3 RD)
+{
+    float t = 0.0;
+    for (int i = 0; i < MaxRaySteps; i++)
+    {
+        float3 pos = RO + t * RD;
+        float h = map(pos);
+        if (h < 0.001)
+        {
+            break;
+        }
+        t += h;
+        if (t > 20.0)
+        {
+            t = -1.0;
+            break;
+        }
+
+    }
+    return t;
+}
+
+[numthreads(8, 8, 1)]
+void CSMain(uint3 id : SV_DispatchThreadID)
+{
+    //P translates the resolution coordinates into -1 to 1 screen space.
+    float2 p = (2.0 * (float2)id.xy - Resolution.xy) / Resolution.y;
+
+    float3 RayOrigin = float3(Player[0].Pos.xy, Player[0].Pos.z + 2.0);
+    float3 RayDir = normalize(float3(p, -1.77778));
+    float3 Colour = float3(0.6, 0.67, 0.999) - 0.5 * RayDir.y;
+
+    //Raymarch
+    float t = TraceRay(RayOrigin, RayDir);
+
+    //Ray hit something
+    if (t > 0.0)
+    {
+        float3 pos = RayOrigin + t * RayDir;
+        float3 normal = CalcNormal(pos);
+        float SunDiffuse = clamp(dot(normal, SunDir), 0.0, 1.0);
+        float SunShadow = step(TraceRay(pos + normal * 0.001, SunDir), 0.0);
+        float SkyDiffuse = clamp(dot(normal, SkyLight), 0.0, 1.0);
+        float SunBounce = clamp(dot(normal, -SkyLight), 0.0, 1.0);
+        Colour = float3(1.0, 0.90, 0.80) * SunDiffuse * SunShadow;
+        Colour += float3(0.0, 0.2, 0.4) * SkyDiffuse;
+        Colour += float3(0.0, 0.20, 0.30) * SunBounce;
+    }
+
+    Colour = pow(Colour, float3(0.4545, 0.4545, 0.4545)); //correct lighting for eyes.
+
+    MapTex[id.xy] = float4(Colour, 1.0);
+}
+
+#pragma kernel CSMainPhysics
+
+[numthreads(1, 1, 1)]
+void CSMainPhysics(uint3 id : SV_DispatchThreadID)
+{
+    float3 ForceToApply = float3(PlayerInput.x, 0, PlayerInput.y) + Gravity;
+    if (Player[id.x].Pos.y > 1.0f && Player[id.x].Vel.y > 1.0f)
+    {
+        Player[id.x].Vel.y = -Player[id.x].Vel.y * 0.68;//bounce?
+    }
+    Player[id.x].Pos = Player[id.x].Pos + Player[id.x].Vel * Delta + 0.5 * ForceToApply * Delta * Delta; //euler acceleration.
+    Player[id.x].Vel = Player[id.x].Vel + ForceToApply * Delta;
+
+}
