@@ -1,14 +1,5 @@
 #pragma kernel CSMain
 
-struct PlayerData
-{
-    float3 Pos;
-    float3 Vel;
-    float Radius;
-};
-
-
-RWStructuredBuffer<PlayerData> Player; //holds position and velocity for the player.
 RWTexture2D<float4> MapTex;
 
 uniform float2 Resolution;
@@ -35,9 +26,9 @@ float map(in float3 pos)
 {
     //distance sphere
     float d = sdfSphere(pos, 0.5);
-    //float floor = Ground(float3(-1,-1,-1),normalize(float3(0.1,1,0.5)),1.0); //floor to be drawn.
+    float floor = Ground(pos,normalize(float3(0.1,1,0.5)),1.0); //floor to be drawn.
     //float floor = pos.y -1.5;
-    return d;// min(d, floor);
+    return min(d, floor);
 }
 float3 CalcNormal(in float3 pos)
 {
@@ -73,8 +64,8 @@ void CSMain(uint3 id : SV_DispatchThreadID)
     //P translates the resolution coordinates into -1 to 1 screen space.
     float2 p = (2.0 * (float2)id.xy - Resolution.xy) / Resolution.y;
 
-    float3 RayOrigin = float3(Player[0].Pos.xy, Player[0].Pos.z + 2.0);
-    float3 RayDir = normalize(float3(p, -1.77778));
+    float3 RayOrigin = float3(PlayerInput.xy, 2.0);
+    float3 RayDir = normalize(float3(p, -Resolution.x/Resolution.y));
     float3 Colour = float3(0.6, 0.67, 0.999) - 0.5 * RayDir.y;
 
     //Raymarch
@@ -97,19 +88,4 @@ void CSMain(uint3 id : SV_DispatchThreadID)
     Colour = pow(Colour, float3(0.4545, 0.4545, 0.4545)); //correct lighting for eyes.
 
     MapTex[id.xy] = float4(Colour, 1.0);
-}
-
-#pragma kernel CSMainPhysics
-
-[numthreads(1, 1, 1)]
-void CSMainPhysics(uint3 id : SV_DispatchThreadID)
-{
-    float3 ForceToApply = float3(PlayerInput.x, 0, PlayerInput.y) + Gravity;
-    if (Player[id.x].Pos.y > 1.0f && Player[id.x].Vel.y > 1.0f)
-    {
-        Player[id.x].Vel.y = -Player[id.x].Vel.y * 0.68;//bounce?
-    }
-    Player[id.x].Pos = Player[id.x].Pos + Player[id.x].Vel * Delta + 0.5 * ForceToApply * Delta * Delta; //euler acceleration.
-    Player[id.x].Vel = Player[id.x].Vel + ForceToApply * Delta;
-
 }
