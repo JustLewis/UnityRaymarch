@@ -209,9 +209,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   CS: {fileID: 7200000, guid: 15bf772fe7b93464db72b8acacc74f0d, type: 3}
-  PlayerInput:
-  - 0
-  - 0
+  RaySteps: 250
 --- !u!1 &1174705965
 GameObject:
   m_ObjectHideFlags: 0
@@ -430,7 +428,7 @@ Camera:
   near clip plane: 0.3
   far clip plane: 1000
   field of view: 60
-  orthographic: 1
+  orthographic: 0
   orthographic size: 5
   m_Depth: -1
   m_CullingMask:

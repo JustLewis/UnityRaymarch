@@ -8,20 +8,22 @@ public class RayMarchScene : MonoBehaviour
 {
     private RawImage ImageHandler;
     private RenderTexture Map;
+    private Camera Cam;
 
     public ComputeShader CS;
     public ComputeBuffer CB; //currently holds player data
+    public int RaySteps = 250;
 
     private int CSMain;
-    private CamControl Cam;
 
     //Game Variables
+    private float rotation = 0.0f;
     private Vector3 PlayerInput = new Vector3(0f, 0f,-1.0f);
     private Vector3 SunDir = Vector3.Normalize(new Vector3(0.8f, 0.4f, 0.42f));
 
     private void Awake()
     {
-        Cam = new CamControl();
+        Cam = GetComponentInParent<Camera>();
         RectTransform RT = GetComponent<RectTransform>();
         RT.sizeDelta = new Vector2(Screen.width, Screen.height);
 
@@ -43,10 +45,10 @@ public class RayMarchScene : MonoBehaviour
         CS.SetTexture(CSMain, "MapTex", Map);
 
         //initial Uniforms
-        CS.SetFloats("Resolution", new float[] { (float)Screen.width, (float)Screen.height });
+        CS.SetFloats("Resolution", new float[] { Screen.width, Screen.height });
         CS.SetFloats("SunDir", new float[] { SunDir.x, SunDir.y, SunDir.z });
-        CS.SetFloats("SkyLight", new float[] { 0.0f, 1.0f, 0.0f });
-        CS.SetInt("MaxRaySteps", 250);
+        CS.SetFloats("SkyLight", new float[] { 0.0f, -1.0f, 0.0f });
+        CS.SetInt("MaxRaySteps", RaySteps);
 
         SetUniforms();
     }
@@ -56,8 +58,7 @@ public class RayMarchScene : MonoBehaviour
     { 
         PlayerInput.x += Input.GetAxisRaw("Horizontal") * Time.deltaTime;
         PlayerInput.y += Input.GetAxisRaw("Vertical") * Time.deltaTime;
-        Cam.Position += PlayerInput;//Not great
-        Cam.Direction = new Vector3(0, 0, -1f);
+        rotation = 10*Input.mousePosition.x / Screen.width;
 
         SetUniforms();
 
@@ -72,10 +73,9 @@ public class RayMarchScene : MonoBehaviour
     private void SetUniforms()
     {
         CS.SetFloat("Delta", Time.deltaTime);
-
-        CS.SetFloats("CamPos", DataHandler.PackAndRetrieveData(Cam.Position));
-        CS.SetFloats("CamDir", DataHandler.PackAndRetrieveData(Cam.Direction));
-        Cam.CalculateViewMatrix();
-        CS.SetFloats("CamRot", Cam.Data);
+        CS.SetFloats("PlayerInput", DataHandler.PackAndRetrieveData(PlayerInput));
+        CS.SetFloats("RotAngle", rotation);
+        CS.SetFloats("Time", Time.time);
+        CS.SetInt("MaxRaySteps", RaySteps);
     }
 }

@@ -42,7 +42,7 @@ public class RayMarchSceneControl : MonoBehaviour
         CS.SetTexture(CSMain, "MapTex", Map);
 
         CB = new ComputeBuffer(7, sizeof(float));
-        CB.SetData(new float[] { 0f, 0f, 0f, 0f, 0f, 0f, 0.5f });
+        CB.SetData(new float[] { 0f, -1.0f, 1.0f, 0f, 0f, 0f, 0.5f });
         CS.SetBuffer(CSMain, "Player", CB);
         CS.SetBuffer(CSMainPhysics, "Player", CB);
 
@@ -59,9 +59,11 @@ public class RayMarchSceneControl : MonoBehaviour
     void Update()
     {
         CS.SetFloat("Delta", Time.deltaTime);
-        PlayerInput[0] += Input.GetAxisRaw("Horizontal") * Speed;
+        PlayerInput[0] -= Input.GetAxisRaw("Horizontal") * Speed;
         PlayerInput[1] += Input.GetAxisRaw("Vertical") * Speed;
         CS.SetFloats("PlayerInput", PlayerInput);
+        float rotation = 10 * Input.mousePosition.x / Screen.width;
+        CS.SetFloats("RotAngle", rotation);
         CS.Dispatch(CSMain, Screen.width / 8, Screen.height / 8, 1);
         CS.Dispatch(CSMainPhysics, 1, 1, 1);
 
