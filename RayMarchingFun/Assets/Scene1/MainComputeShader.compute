@@ -22,9 +22,14 @@ uniform float Delta;
 uniform int MaxRaySteps;
 uniform int BallCount;
 
-float sdfSphere(in float3 pos, in float radius)
+float SdfElipsoid(in float3 pos, in float radius,in float3 Vel)
 {
-    return length(pos) - radius;
+    float3 rad = abs(pos + Vel) * 0.21 + radius;
+    float ka = length(pos / rad);
+    float kb = length(pos / rad / rad);
+
+    return ka * (ka - 1.0) / kb;
+    //return length(pos) - radius;
 }
 
 float Ground(in float3 pos, in float3 normal, in float distance)
@@ -39,7 +44,7 @@ float map(in float3 pos)
     float d = MaxRaySteps;
     for (int i = 0; i < BallCount; i++)
     {
-        float da = sdfSphere(pos + Player[i].Pos, Player[i].Radius);
+        float da = SdfElipsoid(pos + Player[i].Pos, Player[i].Radius, Player[i].Vel);
         d = min(da, d);
     }
     
@@ -127,10 +132,11 @@ void CSMain(uint3 id : SV_DispatchThreadID)
 void CSMainPhysics(uint3 id : SV_DispatchThreadID)
 {
     float3 ForceToApply = Gravity;
-    if (Player[id.x].Pos.y > -Player[id.x].Radius && Player[id.x].Vel.y > 1.0f)
+    if (Player[id.x].Pos.y > Player[id.x].Radius && Player[id.x].Vel.y > 1.0f)
     {
-        Player[id.x].Vel.y = -Player[id.x].Vel.y * 0.68;//bounce?
+        Player[id.x].Vel.y = -Player[id.x].Vel.y;//bounce?
         Player[id.x].Pos.y = Player[id.x].Radius;
+        ForceToApply = 0.0;
     }
     for (int i = 0; i < BallCount; i++)
     {

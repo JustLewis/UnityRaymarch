@@ -425,7 +425,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   CS: {fileID: 7200000, guid: b6c972c645cdc5147a6b93211cdc1019, type: 3}
-  NumberOfBalls: 100
+  NumberOfBalls: 50
   PlayerInput:
   - 0
   - 0
