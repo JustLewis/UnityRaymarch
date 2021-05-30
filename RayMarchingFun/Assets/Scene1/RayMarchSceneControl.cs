@@ -13,9 +13,12 @@ public class RayMarchSceneControl : MonoBehaviour
 
     private int CSMain, CSMainPhysics;
     private float Speed = 0.0015f;
+    public int NumberOfBalls = 20;
 
     //private int[] CBData = new int[] { 0, 0 };
     public float[] PlayerInput = new float[] { 0f, 0f };
+
+    private List<float> Data = new List<float>();
 
     private void Awake()
     {
@@ -41,8 +44,21 @@ public class RayMarchSceneControl : MonoBehaviour
         CSMainPhysics = CS.FindKernel("CSMainPhysics");
         CS.SetTexture(CSMain, "MapTex", Map);
 
-        CB = new ComputeBuffer(7, sizeof(float));
-        CB.SetData(new float[] { 0f, -1.0f, 1.0f, 0f, 0f, 0f, 0.5f });
+        for(int i = 0; i < NumberOfBalls; i ++)
+        {
+            Data.Add(Random.Range(-8f, 8f));
+            Data.Add(Random.Range(-3f, 0f));
+            Data.Add(Random.Range(-8f, 8f));
+            //velocities calculated on shader
+            Data.Add(0f);
+            Data.Add(0f);
+            Data.Add(0f);
+            //radius
+            Data.Add(Random.Range(0.1f, 0.8f));
+        }
+
+        CB = new ComputeBuffer(NumberOfBalls, sizeof(float) * 7);
+        CB.SetData(Data); //setting sphere data
         CS.SetBuffer(CSMain, "Player", CB);
         CS.SetBuffer(CSMainPhysics, "Player", CB);
 
@@ -54,27 +70,32 @@ public class RayMarchSceneControl : MonoBehaviour
         CS.SetFloat("Delta", Time.deltaTime);
         CS.SetInt("MaxRaySteps", 250);
     }
+    private void OnDisable()
+    {
+        CB.Dispose();
+    }
 
     // Update is called once per frame
     void Update()
     {
         CS.SetFloat("Delta", Time.deltaTime);
-        PlayerInput[0] -= Input.GetAxisRaw("Horizontal") * Speed;
-        PlayerInput[1] += Input.GetAxisRaw("Vertical") * Speed;
+        CS.SetInt("BallCount", NumberOfBalls);
+        PlayerInput[0] = -Input.GetAxisRaw("Horizontal") * Speed;
+        PlayerInput[1] = Input.GetAxisRaw("Vertical") * Speed;
         CS.SetFloats("PlayerInput", PlayerInput);
         float rotation = 10 * Input.mousePosition.x / Screen.width;
         CS.SetFloats("RotAngle", rotation);
         CS.Dispatch(CSMain, Screen.width / 8, Screen.height / 8, 1);
-        CS.Dispatch(CSMainPhysics, 1, 1, 1);
+        CS.Dispatch(CSMainPhysics, NumberOfBalls, 1, 1); //100 objects
 
         if (Input.GetKey(KeyCode.LeftShift))
         {
-            Speed += Time.deltaTime * 0.1f;
+            Speed += Time.deltaTime * 0.51f;
         }
         if (Input.GetKey(KeyCode.LeftControl))
         {
-            Speed -= Time.deltaTime * 0.1f;
+            Speed -= Time.deltaTime * 0.51f;
         }
-        Speed = Mathf.Clamp(Speed, 0f, 1f);
+        Speed = Mathf.Clamp(Speed, 0f, 100f);
     }
 }
