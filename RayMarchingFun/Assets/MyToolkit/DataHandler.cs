@@ -26,5 +26,15 @@ public class DataHandler
             Container.Add(Vin.z);
         return Container.ToArray();
     }
+    static public float[] PackAndRetrieveData(Vector4 Vin)
+    {
+        List<float> Container = new List<float>();
+
+        Container.Add(Vin.x);
+        Container.Add(Vin.y);
+        Container.Add(Vin.z);
+        Container.Add(Vin.w);
+        return Container.ToArray();
+    }
 }
 
