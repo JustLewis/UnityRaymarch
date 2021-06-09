@@ -17,9 +17,10 @@ public class RayMarchScene : MonoBehaviour
     private int CSMain;
 
     //Game Variables
-    private float rotation = 0.0f;
-    private Vector3 PlayerInput = new Vector3(0f, 0f,-1.0f);
+    public float RotAngle = -7.0f;
+    private Vector3 PlayerInput = new Vector3(0f, .50f,2.0f);
     private Vector3 SunDir = Vector3.Normalize(new Vector3(0.8f, 0.4f, 0.42f));
+    private Vector3 SecondBall = new Vector3(0, 0.0f, -0.10f);
 
     private void Awake()
     {
@@ -41,6 +42,8 @@ public class RayMarchScene : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
+        Cursor.lockState = CursorLockMode.Locked;
+
         CSMain = CS.FindKernel("CSMain");
         CS.SetTexture(CSMain, "MapTex", Map);
 
@@ -55,10 +58,21 @@ public class RayMarchScene : MonoBehaviour
 
     // Update is called once per frame
     void Update()
-    { 
-        PlayerInput.x += Input.GetAxisRaw("Horizontal") * Time.deltaTime;
-        PlayerInput.y += Input.GetAxisRaw("Vertical") * Time.deltaTime;
-        rotation = 10*Input.mousePosition.x / Screen.width;
+    {
+
+        if (Input.GetKey(KeyCode.Mouse0))
+        {
+            RotAngle += Input.GetAxisRaw("Mouse X") * Time.deltaTime * 10.0f;
+        }
+        if (Input.GetKey(KeyCode.Mouse1))
+        {
+            SecondBall.x += Input.GetAxisRaw("Mouse X") * Time.deltaTime;
+            SecondBall.y += Input.GetAxisRaw("Mouse Y") * Time.deltaTime;
+        }
+        SecondBall.z += Input.GetAxisRaw("Mouse ScrollWheel");// * Time.deltaTime;
+
+        PlayerInput.x -= Input.GetAxisRaw("Horizontal") * Time.deltaTime;
+        PlayerInput.z -= Input.GetAxisRaw("Vertical") * Time.deltaTime;
 
         SetUniforms();
 
@@ -74,7 +88,8 @@ public class RayMarchScene : MonoBehaviour
     {
         CS.SetFloat("Delta", Time.deltaTime);
         CS.SetFloats("PlayerInput", DataHandler.PackAndRetrieveData(PlayerInput));
-        CS.SetFloats("RotAngle", rotation);
+        CS.SetFloats("SecondBall", DataHandler.PackAndRetrieveData(SecondBall));
+        CS.SetFloats("RotAngle", RotAngle);
         CS.SetFloats("Time", Time.time);
         CS.SetInt("MaxRaySteps", RaySteps);
     }

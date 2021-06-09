@@ -20,16 +20,11 @@ uniform float2 PlayerInput; //force to be applied to player
 uniform float3 Gravity;
 uniform float Delta;
 uniform int MaxRaySteps;
-uniform int BallCount;
+uniform uint BallCount;
 
 float SdfElipsoid(in float3 pos, in float radius,in float3 Vel)
 {
-    float3 rad = abs(pos + Vel) * 0.21 + radius;
-    float ka = length(pos / rad);
-    float kb = length(pos / rad / rad);
-
-    return ka * (ka - 1.0) / kb;
-    //return length(pos) - radius;
+    return length(pos) - radius;
 }
 
 float Ground(in float3 pos, in float3 normal, in float distance)
@@ -37,21 +32,42 @@ float Ground(in float3 pos, in float3 normal, in float distance)
     return dot(pos, normal) + distance;
 }
 
-
 float map(in float3 pos)
 {
     //distance sphere
     float d = MaxRaySteps;
-    for (int i = 0; i < BallCount; i++)
+    d = Ground(pos, normalize(float3(0, 1, 0)), 1.0);
+    for (uint i = 0; i < BallCount; i++)
     {
         float da = SdfElipsoid(pos + Player[i].Pos, Player[i].Radius, Player[i].Vel);
         d = min(da, d);
     }
     
-    //float floor = Ground(float3(-1,-1,-1),normalize(float3(0.1,1,0.5)),1.0); //floor to be drawn.
-    //float floor = pos.y + 1.5;
-    //return min(d, floor);
     return d;
+}
+float3 Colourmap(in float3 pos)
+{
+    //distance sphere
+    bool IsPlayer = true;
+    float d = MaxRaySteps;
+    for (uint i = 0; i < BallCount; i++)
+    {
+        float da = SdfElipsoid(pos + Player[i].Pos, Player[i].Radius, Player[i].Vel);
+        if (IsPlayer && i > 0)
+        {
+            if (da < d)
+            {
+                IsPlayer = false;
+            }
+        }
+        d = min(da, d);
+    }
+    float3 Colour = float3(1, 0, 0);
+    if(!IsPlayer)
+    {
+        Colour = float3(1, 0, 1);
+    }
+    return Colour;
 }
 float3 CalcNormal(in float3 pos)
 {
@@ -80,6 +96,10 @@ float TraceRay(float3 RO, float3 RD)
     }
     return t;
 }
+float3 GetColour(in float3 pos)
+{
+    return Colourmap(pos);
+}
 
 [numthreads(8, 8, 1)]
 void CSMain(uint3 id : SV_DispatchThreadID)
@@ -87,13 +107,13 @@ void CSMain(uint3 id : SV_DispatchThreadID)
     //P translates the resolution coordinates into -1 to 1 screen space.
     float2 p = (2.0 * (float2)id.xy - Resolution.xy) / Resolution.y;
 
-    float3 RayOrigin = float3(0.0, 1.0, -4.0);
+    float3 RayOrigin = float3(0.0, 1.0, 4.0);
     float3 RayDir = normalize(float3(p, -1.77778));
     float3 Colour = float3(0.6, 0.67, 0.999) - 0.5 * RayDir.y;
 
 
 
-    float3 Rot = RayOrigin + float3(1.3 * cos(RotAngle), 0.025, 1.3 * sin(RotAngle)); //y is angle 
+    float3 Rot = RayOrigin + float3(1.3 * cos(RotAngle), -0.025, 1.3 * sin(RotAngle)); //y is angle 
 
     //cam rot matrix
     float3 cw = normalize(RayOrigin - Rot);//direction
@@ -112,11 +132,12 @@ void CSMain(uint3 id : SV_DispatchThreadID)
     {
         float3 pos = RayOrigin + t * RayDir;
         float3 normal = CalcNormal(pos);
+        float3 BaseColour = GetColour(pos);
         float SunDiffuse = clamp(dot(normal, SunDir), 0.0, 1.0);
         float SunShadow = step(TraceRay(pos + normal * 0.001, SunDir), 0.0);
         float SkyDiffuse = clamp(dot(normal, SkyLight), 0.0, 1.0);
         float SunBounce = clamp(dot(normal, -SkyLight), 0.0, 1.0);
-        Colour = float3(1.0, 0.90, 0.80) * SunDiffuse * SunShadow;
+        Colour = BaseColour + float3(1.0, 0.90, 0.80) * SunDiffuse * SunShadow;
         Colour += float3(0.0, 0.2, 0.4) * SkyDiffuse;
         Colour += float3(0.0, 0.20, 0.30) * SunBounce;
     }
@@ -131,14 +152,15 @@ void CSMain(uint3 id : SV_DispatchThreadID)
 [numthreads(1, 1, 1)]
 void CSMainPhysics(uint3 id : SV_DispatchThreadID)
 {
-    float3 ForceToApply = Gravity;
+    float3 ForceToApply = -Gravity;
     if (Player[id.x].Pos.y > Player[id.x].Radius && Player[id.x].Vel.y > 1.0f)
     {
-        Player[id.x].Vel.y = -Player[id.x].Vel.y;//bounce?
-        Player[id.x].Pos.y = Player[id.x].Radius;
-        ForceToApply = 0.0;
+        //Player[id.x].Vel.y = -Player[id.x].Vel.y;//bounce?
+        ForceToApply += (abs(Player[id.x].Pos.y) - Player[id.x].Radius) * Gravity * 100.0;
+        //Player[id.x].Pos.y = Player[id.x].Radius;   
+        //ForceToApply = 0.0;
     }
-    for (int i = 0; i < BallCount; i++)
+    for (uint i = 0; i < BallCount; i++)
     {
         if (i == id.x)
         {
@@ -146,11 +168,19 @@ void CSMainPhysics(uint3 id : SV_DispatchThreadID)
         }
         if (distance(Player[id.x].Pos, Player[i].Pos) < Player[id.x].Radius)
         {
-            ForceToApply += -((Player[i].Pos - Player[id.x].Pos)/ Player[id.x].Radius) * 500.0f;
+            ForceToApply += -((Player[i].Pos - Player[id.x].Pos)/ Player[id.x].Radius) * 50.0f;
         }
     }
 
     Player[id.x].Pos = Player[id.x].Pos + Player[id.x].Vel * Delta + 0.5 * ForceToApply * Delta * Delta; //euler acceleration.
-    Player[id.x].Vel = Player[id.x].Vel + ForceToApply * Delta;
+    Player[id.x].Vel = Player[id.x].Vel + ForceToApply * Delta * 0.9; //* 0.9 for deccelleration
+}
 
+#pragma kernel CSMainPlayerPhysics
+
+[numthreads(1,1,1)]
+void CSMainPlayerPhysics(uint3 id : SV_DispatchThreadID)
+{
+    float3 ForceToApply = float3(PlayerInput.x,0.0,PlayerInput.y) * 10;
+    Player[id.x].Vel = Player[id.x].Vel + ForceToApply * Delta;
 }

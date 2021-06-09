@@ -360,12 +360,17 @@ MonoBehaviour:
     m_HorizontalOverflow: 0
     m_VerticalOverflow: 0
     m_LineSpacing: 1
-  m_Text: 'Left mouse x axis controls rotation of camera
+  m_Text: 'Click and drag to rotate camera.
 
-    Shift and control control
-    amount of force applyed to object.
+    Shift and control control amount
+    of force applyed to object.
 
-    WASD controls movement'
+    WASD controls movement.
+
+    Red blob is the
+    controlled blob
+
+    Physics and rendering calculated on the GPU'
 --- !u!222 &395576907
 CanvasRenderer:
   m_ObjectHideFlags: 0
@@ -425,7 +430,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   CS: {fileID: 7200000, guid: b6c972c645cdc5147a6b93211cdc1019, type: 3}
-  NumberOfBalls: 50
+  NumberOfBalls: 60
   PlayerInput:
   - 0
   - 0
@@ -546,4 +551,47 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_RootOrder: 0
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &537133881
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 537133883}
+  - component: {fileID: 537133882}
+  m_Layer: 0
+  m_Name: Player
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &537133882
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 537133881}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d06bb7b619f029a46839b75972e9bf3e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+--- !u!4 &537133883
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 537133881}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: -88.51691, y: 9.55817, z: 57.968678}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_RootOrder: 3
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
