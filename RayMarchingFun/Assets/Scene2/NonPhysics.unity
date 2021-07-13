@@ -140,7 +140,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &557055601
 RectTransform:
   m_ObjectHideFlags: 0
@@ -297,6 +297,8 @@ MonoBehaviour:
   CS: {fileID: 7200000, guid: 15bf772fe7b93464db72b8acacc74f0d, type: 3}
   RaySteps: 250
   RotAngle: -7
+  MouseSpeedMultiplier: 2
+  InputSpeedMultiplier: 2
 --- !u!1 &1174705965
 GameObject:
   m_ObjectHideFlags: 0
