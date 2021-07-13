@@ -307,7 +307,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!224 &395576905
 RectTransform:
   m_ObjectHideFlags: 0
@@ -360,17 +360,8 @@ MonoBehaviour:
     m_HorizontalOverflow: 0
     m_VerticalOverflow: 0
     m_LineSpacing: 1
-  m_Text: 'Click and drag to rotate camera.
-
-    Shift and control control amount
-    of force applyed to object.
-
-    WASD controls movement.
-
-    Red blob is the
-    controlled blob
-
-    Physics and rendering calculated on the GPU'
+  m_Text: Render texture is in the white box in the middle. This will be resized
+    in the script attached to RawImage under Canvas
 --- !u!222 &395576907
 CanvasRenderer:
   m_ObjectHideFlags: 0
@@ -430,10 +421,9 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   CS: {fileID: 7200000, guid: b6c972c645cdc5147a6b93211cdc1019, type: 3}
-  NumberOfBalls: 60
-  PlayerInput:
-  - 0
-  - 0
+  RedData: {fileID: 2800000, guid: 982fe68e7125c0d47acc6f40a1033240, type: 3}
+  GreenData: {fileID: 2800000, guid: 7a3ba91b1a71426459a9bad1303f489a, type: 3}
+  BlueData: {fileID: 2800000, guid: 49d2c0cae5d43314d8c8b73da39fac05, type: 3}
 --- !u!114 &410647331
 MonoBehaviour:
   m_ObjectHideFlags: 0
