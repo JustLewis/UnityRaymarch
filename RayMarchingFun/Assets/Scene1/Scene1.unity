@@ -424,6 +424,7 @@ MonoBehaviour:
   RedData: {fileID: 2800000, guid: 982fe68e7125c0d47acc6f40a1033240, type: 3}
   GreenData: {fileID: 2800000, guid: 7a3ba91b1a71426459a9bad1303f489a, type: 3}
   BlueData: {fileID: 2800000, guid: 49d2c0cae5d43314d8c8b73da39fac05, type: 3}
+  LuminsData: {fileID: 2800000, guid: c599ac7fa1935a74db3c2f846f451451, type: 3}
 --- !u!114 &410647331
 MonoBehaviour:
   m_ObjectHideFlags: 0
