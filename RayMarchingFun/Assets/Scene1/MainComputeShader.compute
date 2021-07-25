@@ -33,12 +33,14 @@ void CSMain(uint3 id : SV_DispatchThreadID)
     
     //Assign the RGB values of colour.
     Colour.x = RedData[id.xy].x * MaxRed;
-    Colour.y = BlueData[id.xy].x * MaxGreen;
-    Colour.z = GreenData[id.xy].x * MaxBlue;
+    Colour.y = GreenData[id.xy].x * MaxGreen;
+    Colour.z = BlueData[id.xy].x * MaxBlue;
 
     //Using lumin data
     Colour *= LuminData[id.xy].x;
-    Colour = ColourCorrection(Colour, 0.4343); //A very basic colour correction modifier.
+    Colour = ColourCorrection(Colour, 0.4343);//Example use of a function in a compute shader.
+    
+    Colour.w = 1.0f; //Resetting alpha to 1.0 for no transparancy.
 
     //Assign the MapTexture pixel it the colour calculated.
     MapTex[id.xy] = Colour;
