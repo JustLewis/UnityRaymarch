@@ -14,13 +14,17 @@ public class RayMarchSceneControl : MonoBehaviour
     public Texture2D RedData;
     public Texture2D GreenData;
     public Texture2D BlueData;
+    public Texture2D LuminsData;
 
     private int CSMain;
 
     private float MaxRed = 1.0f;
     private float MaxBlue = 1.0f;
     private float MaxGreen = 1.0f;
+    private float MaxLumin = 1.0f;
 
+    private float[] Offsets = new float[]{0.0f,0.0f,0.0f,0.0f,0.0f,0.0f};
+    private uint ID = 0;
     private void Awake()
     {
         RectTransform RT = GetComponent<RectTransform>();
@@ -47,10 +51,12 @@ public class RayMarchSceneControl : MonoBehaviour
         CS.SetTexture(CSMain, "RedData", RedData);
         CS.SetTexture(CSMain, "GreenData", GreenData);
         CS.SetTexture(CSMain, "BlueData", BlueData);
+        CS.SetTexture(CSMain, "LuminData", LuminsData);
 
         CS.SetFloat("MaxRed", MaxRed);
         CS.SetFloat("MaxGreen", MaxGreen);
         CS.SetFloat("MaxBlue", MaxBlue);
+        CS.SetFloat("MaxLumin", MaxLumin);
 
         dispatch();
     }

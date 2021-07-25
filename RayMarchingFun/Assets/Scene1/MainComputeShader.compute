@@ -5,18 +5,22 @@ RWTexture2D<float4> MapTex;
 Texture2D<float4> RedData;
 Texture2D<float4> GreenData;
 Texture2D<float4> BlueData;
+Texture2D<float4> LuminData;
 
 uniform float MaxRed;
 uniform float MaxBlue;
 uniform float MaxGreen;
+uniform float MaxLumin;
 
 [numthreads(8, 8, 1)]
 void CSMain(uint3 id : SV_DispatchThreadID)
 {
     float4 Colour = float4(0.0, 0.0, 0.0, 1.0);
-    Colour.x = RedData[id.xy].x / MaxRed;
-    Colour.y = BlueData[id.xy].x / MaxBlue;
-    Colour.z = GreenData[id.xy].x / MaxGreen;
+    Colour.x = RedData[id.xy].x * LuminData[id.xy].x;
+    Colour.y = BlueData[id.xy].x * LuminData[id.xy].x;
+    Colour.z = GreenData[id.xy].x * LuminData[id.xy].x;
+
+    Colour = pow(Colour, 0.4343);
 
     MapTex[id.xy] = Colour;
     //MapTex[id.xy] = float4(0.5,0.5,0.5,1.0);
